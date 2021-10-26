@@ -405,7 +405,8 @@ void Cn2n_guiDlg::SetRoute(bool bEnable)
 		TRACE("%s\r\n",Cmd);
 		WinExec(Cmd,SW_HIDE);
 	}
-	if (bEnable) m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------添加路由完成.----------------------\r\n",0);
+	if (bEnable && m_List.GetItemCount()>0) 
+		m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------添加路由完成.----------------------\r\n",0);
 }
 
 DWORD CALLBACK	ReadLogThread(LPVOID lp)
@@ -518,14 +519,14 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 	else if (strcmp(Name,"启动")==0)
 	{
 		//----------------------------启动客户端-----------------------------
-		if (GetDlgItemText(IDC_EDIT_NETNAME,Name,sizeof(Name))>0 && 
+		CIPAddressCtrl *pIP = (CIPAddressCtrl*)GetDlgItem(IDC_IPADDRESS_IP);
+		pIP->GetAddress(ip[0],ip[1],ip[2],ip[3]);
+		pIP = (CIPAddressCtrl*)GetDlgItem(IDC_IPADDRESS_MASK);
+		pIP->GetAddress(mask[0],mask[1],mask[2],mask[3]);
+		if (GetDlgItemText(IDC_EDIT_NETNAME,Name,sizeof(Name))>0 && *((UINT*)ip)!=0 && *((UINT*)mask)!=0 &&
 			GetDlgItemText(IDC_COMBO_SERVERLIST,Server,sizeof(Server))>0 && strchr(Server,':')!=NULL)
 		{
 			GetDlgItemText(IDC_EDIT_PASSWD,Passwd,sizeof(Passwd));
-			CIPAddressCtrl *pIP = (CIPAddressCtrl*)GetDlgItem(IDC_IPADDRESS_IP);
-			pIP->GetAddress(ip[0],ip[1],ip[2],ip[3]);
-			pIP = (CIPAddressCtrl*)GetDlgItem(IDC_IPADDRESS_MASK);
-			pIP->GetAddress(mask[0],mask[1],mask[2],mask[3]);
 			//执行N2N
 			int len=sprintf_s(ClinePath,MAX_PATH,"%sn2n_client\\x%d\\edge_v2_n2n.exe -a %s -s %s -c %s -l %s",
 				ProPath,SystemBits,IpToStrip(ip,str1),IpToStrip(mask,str2),Name,Server);
@@ -548,7 +549,7 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 		if (bEnable && Port>0 && Port<65535)
 		{
 			if (StartN2nServer(Port))
-				m_LogDlg.PostMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N服务端端启动...----------------------\r\n");
+				m_LogDlg.PostMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N服务端启动...----------------------\r\n");
 		}
 		//禁用控件
 		for (int id=0; id<=10; id++)
@@ -659,6 +660,7 @@ void Cn2n_guiDlg::OnBnClickedBtnAddServer()
 		pBox->AddString(dlg.m_Edit);
 		SERVER_Struct Host;
 		memset(&Host,0,sizeof(Host));
+		Host.IpMask[1]=Host.IpMask[0]=Host.IpMask[2]=255;
 		strcpy_s(Host.Server,sizeof(Host.Server),dlg.m_Edit);
 		ServerArray.Add(Host);
 		int n=pBox->GetCount();
