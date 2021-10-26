@@ -8,6 +8,7 @@
 #include "afxdialogex.h"
 #include "AddServerDlg.h"
 #include "AddRouteDlg.h"
+#include "SetDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -15,6 +16,16 @@
 
 #pragma comment(lib,"Iphlpapi.lib") //需要添加Iphlpapi.lib库
 
+int GetNtVersionNumbers()
+{
+	typedef void(__stdcall*NTPROC)(DWORD*, DWORD*, DWORD*);
+	HINSTANCE hinst = LoadLibrary(TEXT("ntdll.dll"));//加载DLL
+	NTPROC GetNtVersionNumbers = (NTPROC)GetProcAddress(hinst, "RtlGetNtVersionNumbers");//获取函数地址
+	DWORD dwMajor, dwMinor, dwBuildNumber;
+	GetNtVersionNumbers(&dwMajor, &dwMinor, &dwBuildNumber);
+	FreeLibrary(hinst);
+	return dwMajor;		//5:XP, 6:WIN7, 10:WIN10
+}
 
 void SafeGetNativeSystemInfo(LPSYSTEM_INFO lpSystemInfo)
 {
@@ -137,7 +148,7 @@ bool CheckTapAdapters()
 		//可能有多网卡,因此通过循环去判断
 		for (PIP_ADAPTER_INFO p=pIpAdapterInfo;p!=NULL;p=p->Next)
 		{
-			if (strcmp(p->Description,"TAP-Windows Adapter V9")==0)
+			if (strncmp(p->Description,"TAP-Windows Adapter V9",22)==0)
 			{
 				flag=true;
 				break;
@@ -188,6 +199,7 @@ Cn2n_guiDlg::Cn2n_guiDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(Cn2n_guiDlg::IDD, pParent)
 	, SystemBits(0)
 	, ConnectTick(0)
+	, bAutoHide(false)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	hClientProcess= hClientRead= hServerProcess=0;
@@ -222,6 +234,7 @@ BEGIN_MESSAGE_MAP(Cn2n_guiDlg, CDialogEx)
 	ON_MESSAGE(ON_NOTIFY_ICON_MSG,OnNotifyIconMsg)
 	ON_BN_CLICKED(IDC_BTN_HIDE, &Cn2n_guiDlg::OnBnClickedBtnHide)
 	ON_BN_CLICKED(IDC_BTN_EDIT_SERVER, &Cn2n_guiDlg::OnBnClickedBtnEditServer)
+	ON_BN_CLICKED(IDC_BTN_SET, &Cn2n_guiDlg::OnBnClickedBtnSet)
 END_MESSAGE_MAP()
 
 // Cn2n_guiDlg 消息处理程序
@@ -272,6 +285,8 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 
 	char str[2048],ProfilePath[MAX_PATH];
 	sprintf_s(ProfilePath,sizeof(ProfilePath),"%sn2n.ini",ProPath);
+	//
+	bAutoHide=GetPrivateProfileInt("Config","AutoHide",0,ProfilePath)==1;
 	//读取服务器列表
 	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_COMBO_SERVERLIST);
 	int len=GetPrivateProfileSectionNames(str,sizeof(str),ProfilePath);
@@ -391,19 +406,31 @@ void Cn2n_guiDlg::OnBnClickedOk()
 
 void Cn2n_guiDlg::SetRoute(bool bEnable)
 {
-	char Cmd[64],ip[24],gate[20];
+	char Cmd[64],ip[24],gate[20],mask[20];
+	UCHAR IP[4],Mask,MaskAddr[4];
 	
 	for (int i=0; i<m_List.GetItemCount();i++)
 	{
 		if (!m_List.GetCheck(i)) continue;
 		m_List.GetItemText(i,0,ip,sizeof(ip));
 		m_List.GetItemText(i,1,gate,sizeof(gate));
-		if (bEnable)
-			sprintf_s(Cmd,sizeof(Cmd),"route add %s %s",ip,gate);
-		else
-			sprintf_s(Cmd,sizeof(Cmd),"route delete %s",ip);
-		TRACE("%s\r\n",Cmd);
-		WinExec(Cmd,SW_HIDE);
+		if (StrNetaddrToIp(ip,IP,&Mask))
+		{
+			unsigned int val=0;
+			for (int j=0; j<Mask; j++)
+				val|=(1<<(31-j));
+			MaskAddr[0]=(UCHAR)(val>>24),MaskAddr[1]=(UCHAR)((val>>16)&0xff);
+			MaskAddr[2]=(UCHAR)((val>>8)&0xff),MaskAddr[3]=(UCHAR)(val&0xff);
+			
+			char *ptmp=strchr(ip,'/');
+			if (ptmp) *ptmp=0;
+			if (bEnable)
+				sprintf_s(Cmd,sizeof(Cmd),"route add %s mask %s %s",ip,IpToStrip(MaskAddr,mask),gate);
+			else
+				sprintf_s(Cmd,sizeof(Cmd),"route delete %s",ip);
+			TRACE("%s\r\n",Cmd);
+			WinExec(Cmd,SW_HIDE);
+		}
 	}
 	if (bEnable && m_List.GetItemCount()>0) 
 		m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------添加路由完成.----------------------\r\n",0);
@@ -433,6 +460,7 @@ DWORD CALLBACK	ReadLogThread(LPVOID lp)
 				((CStatic*)pDlg->GetDlgItem(IDC_PIC_CONNECT))->SetIcon(pDlg->m_Icon_Connected);
 				strcpy_s(pDlg->m_Nid.szTip,sizeof(pDlg->m_Nid.szTip),"n2n Gui 已连接");	
 				Shell_NotifyIcon(NIM_MODIFY,&pDlg->m_Nid);				//修改托盘区图标
+				if (pDlg->bAutoHide) pDlg->PostMessage(WM_COMMAND,IDC_BTN_HIDE);
 			}
 		}
 	}
@@ -509,9 +537,11 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 	GetDlgItemText(IDC_BTN_START_STOP,Name,10);
 	if (strcmp(Name,"安装网卡")==0)
 	{
+		int sysver=GetNtVersionNumbers();
+		char const *exefile=sysver==5 ? "tap-windows-9.9.2 for xp.exe":"tap-windows-9.21.2.exe";
 		if (!SHGetSpecialFolderPath(m_hWnd,str1,CSIDL_PROGRAM_FILES,false))
 			strcpy_s(str1,sizeof(str1),"C:\\Program Files");
-		sprintf_s(ClinePath,MAX_PATH,"%sn2n_client\\tap-windows-9.21.2.exe /S /D=\"%s\\TAP-Windows\"",ProPath,str1);
+		sprintf_s(ClinePath,MAX_PATH,"%sn2n_client\\%s /S /D=\"%s\\TAP-Windows\"",ProPath,exefile,str1);
 		WinExec(ClinePath,SW_SHOW);
 		KillTimer(2);
 		SetTimer(2,1000,NULL);
@@ -741,6 +771,7 @@ void Cn2n_guiDlg::OnBnClickedBtnSave()
 	int n=((CComboBox*)GetDlgItem(IDC_COMBO_SERVERLIST))->GetCurSel();
 	if (n==-1) return;
 	WritePrivateProfileString("Config","LastSel",Itoa(n,str),ProFileName);
+	WritePrivateProfileString("Config","AutoHide",Itoa(bAutoHide,str),ProFileName);
 
 	char Name[sizeof(((SERVER_Struct*)0)->NetName)],Passwd[sizeof(((SERVER_Struct*)0)->NetPasswd)];
 	SERVER_Struct &NowHost=ServerArray[n];
@@ -943,5 +974,19 @@ void Cn2n_guiDlg::OnMenuClickedAddRoute(void)
 		m_List.InsertItem(n,dlg.NetAddr);
 		m_List.SetItemText(n,2,dlg.m_Note);
 		m_List.SetItemText(n,1,IpToStrip(dlg.GATE,gate));
+	}
+}
+
+
+void Cn2n_guiDlg::OnBnClickedBtnSet()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	char str[20],ProFileName[MAX_PATH];
+	sprintf_s(ProFileName,sizeof(ProFileName),"%sn2n.ini",ProPath);
+	CSetDlg dlg(bAutoHide);
+	if (dlg.DoModal()==IDOK)
+	{
+		bAutoHide=dlg.bHide;
+		WritePrivateProfileString("Config","AutoHide",Itoa(bAutoHide,str),ProFileName);
 	}
 }

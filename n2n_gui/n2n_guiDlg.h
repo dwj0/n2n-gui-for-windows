@@ -95,4 +95,6 @@ public:
 	void OnMenuClickedDelRoute(void);
 	void OnMenuClickedEditRoute(void);
 	UINT ConnectTick;
+	afx_msg void OnBnClickedBtnSet();
+	bool bAutoHide;
 };
