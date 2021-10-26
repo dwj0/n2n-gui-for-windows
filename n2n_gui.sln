@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "n2n_gui", "n2n_gui\n2n_gui.vcxproj", "{FF8FB752-7CE2-4AD9-B9F9-4AC54ECED4CF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF8FB752-7CE2-4AD9-B9F9-4AC54ECED4CF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FF8FB752-7CE2-4AD9-B9F9-4AC54ECED4CF}.Debug|Win32.Build.0 = Debug|Win32
+		{FF8FB752-7CE2-4AD9-B9F9-4AC54ECED4CF}.Release|Win32.ActiveCfg = Release|Win32
+		{FF8FB752-7CE2-4AD9-B9F9-4AC54ECED4CF}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
