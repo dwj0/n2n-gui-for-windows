@@ -6,6 +6,7 @@
 #include "afxcmn.h"
 #include "afxwin.h"
 #include "LogDlg.h"
+#include "SetDlg.h"
 #include "colorstatic.h"
 
 #define ON_MOVE_LOGWINDOW_MSG	(WM_USER+1)
@@ -97,4 +98,6 @@ public:
 	UINT ConnectTick;
 	afx_msg void OnBnClickedBtnSet();
 	bool bAutoHide;
+	CString ReSendIf;
+	CString m_OtherParam;
 };

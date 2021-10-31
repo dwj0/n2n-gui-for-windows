@@ -1,31 +1,39 @@
-// SetDlg.cpp : ÊµÏÖÎÄ¼ş
+ï»¿// SetDlg.cpp : å®ç°æ–‡ä»¶
 //
 
 #include "stdafx.h"
 #include "n2n_gui.h"
 #include "SetDlg.h"
 #include "afxdialogex.h"
-#include  < winsvc.h >
+
+NetAdapters_Struct *GetAdapters(int *Cnt);
 
 
-// CSetDlg ¶Ô»°¿ò
+
+
+// CSetDlg å¯¹è¯æ¡†
 
 IMPLEMENT_DYNAMIC(CSetDlg, CDialogEx)
 
 CSetDlg::CSetDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CSetDlg::IDD, pParent)
+	, m_OtherParam(_T(""))
 {
 
 }
 
-CSetDlg::CSetDlg(bool _Hide,CWnd* pParent /*=NULL*/)
+CSetDlg::CSetDlg(bool _Hide, char const *_Resendif, char const *_Param, CWnd* pParent /*=NULL*/)
 	: CDialogEx(CSetDlg::IDD, pParent)
 {
 	bHide=_Hide;
+	ReSendIf=_Resendif;
+	m_OtherParam=_Param;
+	AdaptersCnt=0;
 }
 
 CSetDlg::~CSetDlg()
 {
+	if (pAdapters) delete pAdapters;
 }
 
 void CSetDlg::DoDataExchange(CDataExchange* pDX)
@@ -36,192 +44,87 @@ void CSetDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CSetDlg, CDialogEx)
 	ON_BN_CLICKED(IDOK, &CSetDlg::OnBnClickedOk)
-	ON_BN_CLICKED(IDC_CHECK_RESEND, &CSetDlg::OnBnClickedCheckResend)
 END_MESSAGE_MAP()
 
 
-// CSetDlg ÏûÏ¢´¦Àí³ÌĞò
+// CSetDlg æ¶ˆæ¯å¤„ç†ç¨‹åº
 
 
 void CSetDlg::OnBnClickedOk()
 {
-	// TODO: ÔÚ´ËÌí¼Ó¿Ø¼şÍ¨Öª´¦Àí³ÌĞò´úÂë
+	// TODO: åœ¨æ­¤æ·»åŠ æ§ä»¶é€šçŸ¥å¤„ç†ç¨‹åºä»£ç 
 	bHide=((CButton*)GetDlgItem(IDC_CHECK_AUTOHIDE))->GetCheck()==1;
+	GetDlgItemText(IDC_EDIT_PARAM,m_OtherParam);
+
+	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_COMBO_IF);
+	int cur=pBox->GetCurSel();
+	if (cur==0)
+		ReSendIf="";
+	else
+	{
+		pBox->GetLBText(cur,ReSendIf);
+		for (int i=0; i<AdaptersCnt; i++)
+		{
+			if (strncmp(ReSendIf,pAdapters[i].Name,strlen(pAdapters[i].Name))==0)
+			{
+				ReSendIf=pAdapters[i].Name;
+				break;
+			}
+		}
+	}
+
+	/*
+//	if (ReSendIf!="æ— è½¬å‘")
+	{
+		CoInitialize(NULL);
+		CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
+
+		INetSharingManager * pNSM = NULL;
+		HRESULT hr = ::CoCreateInstance(__uuidof(NetSharingManager),
+			NULL,
+			CLSCTX_ALL,
+			__uuidof(INetSharingManager),
+			(void**)&pNSM);
+
+		if (!pNSM)
+		{
+//			wprintf(L"failed to create NetSharingManager object\r\n");
+		}
+		else
+		{
+			//shareNet(pNSM, "WLAN", "ä»¥å¤ªç½‘ 4");
+			disShareNet(pNSM);
+			shareNet(pNSM, ReSendIf, "æœ¬åœ°è¿æ¥ 2");
+			//StartHostednetwork();
+		}
+	}*/
+
 	CDialogEx::OnOK();
 }
-
-void SetServiceStartType(SC_HANDLE hSC,SC_HANDLE hSvc)
-{
-	UCHAR Buf[500];
-	LPQUERY_SERVICE_CONFIG lpsc=(LPQUERY_SERVICE_CONFIG)Buf; 
-	DWORD dwBytesNeeded; 
-
-	if( !QueryServiceConfig( hSvc, lpsc, sizeof(Buf), &dwBytesNeeded))
-	{
-	/*	DWORD dwError = GetLastError();
-		if( ERROR_INSUFFICIENT_BUFFER == dwError )
-			printf("ÄÚ´æ·ÖÅä²»×ã", dwError);
-		else
-			printf("QueryServiceConfig failed (%d)", dwError);*/
-	}
-
-	else if (lpsc->dwStartType==SERVICE_DISABLED)
-	{
-		SC_LOCK sclLock = LockServiceDatabase(hSC);
-		if (sclLock == NULL)
-		{
-		/*	if (GetLastError() != ERROR_SERVICE_DATABASE_LOCKED)
-				printf("LockServiceDatabase error/n");*/
-		}
-		if (! ChangeServiceConfig(
-			hSvc,					// handle of service
-			SERVICE_NO_CHANGE,		// service type: no change
-			SERVICE_DEMAND_START,	// ÕâÀï×öÁË¸ü¸Ä
-			SERVICE_NO_CHANGE,		// error control: no change
-			NULL,					// binary path: no change
-			NULL,				    // load order group: no change
-			NULL,				    // tag ID: no change
-			NULL,					// dependencies: no change
-			NULL,					// account name: no change
-			NULL,					// password: no change
-			NULL))					//displayname
-		{
-		//	printf("ChangeServiceConfig error!/n");
-		}
-		UnlockServiceDatabase(sclLock);
-	}
-}
-
-void CSetDlg::OnBnClickedCheckResend()
-{
-	// TODO: ÔÚ´ËÌí¼Ó¿Ø¼şÍ¨Öª´¦Àí³ÌĞò´úÂë
-	// ´ò¿ª·şÎñ¹ÜÀí¶ÔÏó
-	SC_HANDLE hSC = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-	if( hSC == NULL)
-	{
-		TRACE( "open SCManager error");
-		return;
-	}
-	// ´ò¿ªRemoteAccess·şÎñ¡£
-	SC_HANDLE hSvc = ::OpenService( hSC, "RemoteAccess", SERVICE_ALL_ACCESS);
-	if( hSvc == NULL)
-	{
-		TRACE( "Open www erron¡£");
-		::CloseServiceHandle( hSC);
-		return;
-	}
-	// »ñµÃ·şÎñµÄ×´Ì¬
-	SERVICE_STATUS status;
-	if( ::QueryServiceStatus( hSvc, &status) == FALSE)
-	{
-		TRACE( "Get Service state error¡£");
-		::CloseServiceHandle( hSvc);
-		::CloseServiceHandle( hSC);
-		return;
-	}
-
-	int Enable=((CButton*)GetDlgItem(IDC_CHECK_RESEND))->GetCheck();
-	//¿ªÆô RemoteAccess ·şÎñ
-	if (Enable)
-	{
-		if( status.dwCurrentState == SERVICE_RUNNING)
-		{
-			::CloseServiceHandle( hSvc);
-			::CloseServiceHandle( hSC);
-			return;
-		}
-		// ¸ü¸ÄÆô¶¯ÀàĞÍ£¬·ÀÖ¹±»½ûÓÃ
-		SetServiceStartType(hSC,hSvc);
-		// Æô¶¯·şÎñ
-		if( ::StartService( hSvc, NULL, NULL) == FALSE)
-		{
-			TRACE( "start service error¡£");
-			::CloseServiceHandle( hSvc);
-			::CloseServiceHandle( hSC);
-			((CButton*)GetDlgItem(IDC_CHECK_RESEND))->SetCheck(FALSE);
-			return;
-		}
-		// µÈ´ı·şÎñÆô¶¯
-		while( ::QueryServiceStatus( hSvc, &status) == TRUE)
-		{
-			if( status.dwCurrentState == SERVICE_RUNNING)
-			{
-				AfxMessageBox( "start success¡£");
-				::CloseServiceHandle( hSvc);
-				::CloseServiceHandle( hSC);
-				return;
-			}
-			::Sleep( status.dwWaitHint>100 ? 100:status.dwWaitHint);
-		}
-	}
-	//¹Ø±Õ RemoteAccess ·şÎñ
-	else		//if (Enable)
-	{
-		if( status.dwCurrentState == SERVICE_STOPPED)
-		{
-			::CloseServiceHandle( hSvc);
-			::CloseServiceHandle( hSC);
-			return;
-		}
-		// Í£Ö¹·şÎñ
-		if( ::ControlService( hSvc, SERVICE_CONTROL_STOP, &status) == FALSE)
-		{
-			TRACE( "stop service error¡£");
-			::CloseServiceHandle( hSvc);
-			::CloseServiceHandle( hSC);
-			((CButton*)GetDlgItem(IDC_CHECK_RESEND))->SetCheck(TRUE);
-			return;
-		}
-		// µÈ´ı·şÎñÍ£Ö¹
-		while( ::QueryServiceStatus( hSvc, &status) == TRUE)
-		{
-			if( status.dwCurrentState == SERVICE_STOPPED)
-			{
-				AfxMessageBox( "stop success¡£");
-				::CloseServiceHandle( hSvc);
-				::CloseServiceHandle( hSC);
-				return;
-			}
-			::Sleep( status.dwWaitHint>1000 ? 1000:status.dwWaitHint);
-		}
-	}
-}
-
 
 BOOL CSetDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
 	((CButton*)GetDlgItem(IDC_CHECK_AUTOHIDE))->SetCheck(bHide);
-	// ´ò¿ª·şÎñ¹ÜÀí¶ÔÏó
-	SC_HANDLE hSC = ::OpenSCManager(NULL, NULL, GENERIC_EXECUTE);
-	if( hSC == NULL)
+	SetDlgItemText(IDC_EDIT_PARAM, m_OtherParam);
+
+	int n=0;
+	pAdapters=GetAdapters(&AdaptersCnt);
+	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_COMBO_IF);
+	pBox->AddString("ä¸è½¬å‘");
+	for (int i=0; i<AdaptersCnt; i++)
 	{
-		TRACE( "open SCManager error");
-		return TRUE;
+		if (strncmp(pAdapters[i].Description,"TAP-Windows Adapter V9",22)!=0)
+		{
+			char str[128];
+			sprintf_s(str,sizeof(str),"%s{%s}",pAdapters[i].Name,pAdapters[i].Description);
+			pBox->AddString(str);
+			if (ReSendIf==pAdapters[i].Name) n=i;
+		}
 	}
-	// ´ò¿ªRemoteAccess·şÎñ¡£
-	SC_HANDLE hSvc = ::OpenService( hSC, "RemoteAccess", SERVICE_START | SERVICE_QUERY_STATUS | SERVICE_STOP);
-	if( hSvc == NULL)
-	{
-		TRACE( "Open www erron¡£");
-		::CloseServiceHandle( hSC);
-		return TRUE;
-	}
-	// »ñµÃ·şÎñµÄ×´Ì¬
-	SERVICE_STATUS status;
-	if( ::QueryServiceStatus( hSvc, &status) == FALSE)
-	{
-		TRACE( "Get Service state error¡£");
-		::CloseServiceHandle( hSvc);
-		::CloseServiceHandle( hSC);
-		return TRUE;
-	}
-	::CloseServiceHandle( hSvc);
-	::CloseServiceHandle( hSC);
-	if( status.dwCurrentState == SERVICE_RUNNING)
-		((CButton*)GetDlgItem(IDC_CHECK_RESEND))->SetCheck(TRUE);
+	pBox->SetCurSel(n);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
-	// Òì³£: OCX ÊôĞÔÒ³Ó¦·µ»Ø FALSE
+	// å¼‚å¸¸: OCX å±æ€§é¡µåº”è¿”å› FALSE
 }

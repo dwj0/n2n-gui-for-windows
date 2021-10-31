@@ -1,5 +1,11 @@
 #pragma once
 
+struct NetAdapters_Struct
+{
+	int Index;
+	char Name[64];
+	char Description[64];
+};
 
 // CSetDlg 对话框
 
@@ -9,7 +15,7 @@ class CSetDlg : public CDialogEx
 
 public:
 	CSetDlg(CWnd* pParent = NULL);   // 标准构造函数
-	CSetDlg(bool _Hide,CWnd* pParent = NULL);   // 标准构造函数
+	CSetDlg(bool _Hide, char const *_Resendif, char const *_Param, CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CSetDlg();
 
 // 对话框数据
@@ -21,7 +27,10 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	bool bHide;
+	CString ReSendIf;
+	CString m_OtherParam;
+	int AdaptersCnt;
+	NetAdapters_Struct *pAdapters;
 	afx_msg void OnBnClickedOk();
-	afx_msg void OnBnClickedCheckResend();
 	virtual BOOL OnInitDialog();
 };
