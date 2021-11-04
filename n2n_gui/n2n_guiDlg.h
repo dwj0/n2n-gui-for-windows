@@ -5,11 +5,10 @@
 #pragma once
 #include "afxcmn.h"
 #include "afxwin.h"
-#include "LogDlg.h"
 #include "SetDlg.h"
 #include "colorstatic.h"
 
-#define ON_MOVE_LOGWINDOW_MSG	(WM_USER+1)
+#define ON_SHOWLOG_MSG			(WM_USER+1)
 #define ON_NOTIFY_ICON_MSG		(WM_USER+2)
 
 
@@ -77,10 +76,8 @@ public:
 
 	HANDLE hClientProcess, hClientRead, hServerProcess;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	CLogDlg m_LogDlg;
 	afx_msg void OnBnClickedBtnClrlog();
 	afx_msg void OnBnClickedBtnLog();
-	LRESULT OnMoveLogWindowMsg(WPARAM w, LPARAM l);
 	CColorStatic m_ConnectStatus;
 
 	HICON m_Icon_Connected, m_Icon_NoConnect, m_Icon_ConnectErr;
@@ -100,4 +97,7 @@ public:
 	bool bAutoHide;
 	CString ReSendIf;
 	CString m_OtherParam;
+	CEdit m_Log;
+	LRESULT OnShowLogMsg(WPARAM w, LPARAM l);
+	afx_msg void OnBnClickedBtnClrLog();
 };

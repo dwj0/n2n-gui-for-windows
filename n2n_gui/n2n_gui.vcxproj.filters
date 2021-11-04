@@ -51,9 +51,6 @@
     <ClInclude Include="Resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="LogDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="ColorStatic.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -75,9 +72,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="LogDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ColorStatic.cpp">

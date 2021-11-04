@@ -106,7 +106,6 @@
     <ClInclude Include="AddRouteDlg.h" />
     <ClInclude Include="AddServerDlg.h" />
     <ClInclude Include="ColorStatic.h" />
-    <ClInclude Include="LogDlg.h" />
     <ClInclude Include="n2n_gui.h" />
     <ClInclude Include="n2n_guiDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -118,7 +117,6 @@
     <ClCompile Include="AddRouteDlg.cpp" />
     <ClCompile Include="AddServerDlg.cpp" />
     <ClCompile Include="ColorStatic.cpp" />
-    <ClCompile Include="LogDlg.cpp" />
     <ClCompile Include="n2n_gui.cpp" />
     <ClCompile Include="n2n_guiDlg.cpp" />
     <ClCompile Include="SetDlg.cpp" />

@@ -441,6 +441,7 @@ void Cn2n_guiDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LIST1, m_List);
 	DDX_Control(pDX, IDC_STATIC_CONNECT_STATUS, m_ConnectStatus);
+	DDX_Control(pDX, IDC_EDIT_LOG, m_Log);
 }
 
 BEGIN_MESSAGE_MAP(Cn2n_guiDlg, CDialogEx)
@@ -460,11 +461,12 @@ BEGIN_MESSAGE_MAP(Cn2n_guiDlg, CDialogEx)
 	ON_BN_CLICKED(ID_MENU_EDIT_ROUTE,&Cn2n_guiDlg::OnMenuClickedEditRoute)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BTN_LOG, &Cn2n_guiDlg::OnBnClickedBtnLog)
-	ON_MESSAGE(ON_MOVE_LOGWINDOW_MSG,OnMoveLogWindowMsg)
-	ON_MESSAGE(ON_NOTIFY_ICON_MSG,OnNotifyIconMsg)
+	ON_MESSAGE(ON_NOTIFY_ICON_MSG,&Cn2n_guiDlg::OnNotifyIconMsg)
+	ON_MESSAGE(ON_SHOWLOG_MSG,&Cn2n_guiDlg::OnShowLogMsg)
 	ON_BN_CLICKED(IDC_BTN_HIDE, &Cn2n_guiDlg::OnBnClickedBtnHide)
 	ON_BN_CLICKED(IDC_BTN_EDIT_SERVER, &Cn2n_guiDlg::OnBnClickedBtnEditServer)
 	ON_BN_CLICKED(IDC_BTN_SET, &Cn2n_guiDlg::OnBnClickedBtnSet)
+	ON_BN_CLICKED(IDC_BTN_CLR_LOG, &Cn2n_guiDlg::OnBnClickedBtnClrLog)
 END_MESSAGE_MAP()
 
 // Cn2n_guiDlg 消息处理程序
@@ -552,8 +554,6 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 	SetDlgItemInt(IDC_EDIT_SERVER_PORT,Port);
 	((CButton*)GetDlgItem(IDC_CHECK_SERVER))->SetCheck(Enable);
 
-	m_LogDlg.Create(IDD_LOG_DLG,this);
-	PostMessage(ON_MOVE_LOGWINDOW_MSG,0,0);		//移动位置，在这移动的话主窗口位置还未确定
 	//检测网卡
 	m_Icon_Connected=AfxGetApp()->LoadIcon(IDI_ICON1);
 	m_Icon_NoConnect=AfxGetApp()->LoadIcon(IDI_ICON2);
@@ -580,6 +580,11 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 	m_Nid.hIcon=LoadIcon(AfxGetInstanceHandle(),MAKEINTRESOURCE(IDR_MAINFRAME));
 	strcpy_s(m_Nid.szTip,sizeof(m_Nid.szTip),"n2n Gui 未连接");//信息提示条	
 	Shell_NotifyIcon(NIM_ADD,&m_Nid);				//在托盘区添加图标
+
+	//隐藏日志窗口
+	m_Log.SetLimitText(500*1024);
+	PostMessage(WM_COMMAND,IDC_BTN_LOG);
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -667,7 +672,7 @@ void Cn2n_guiDlg::SetRoute(bool bEnable)
 		}
 	}
 	if (bEnable && m_List.GetItemCount()>0) 
-		m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------添加路由完成.----------------------\r\n",0);
+		SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------添加路由完成.----------------------\r\n",0);
 }
 
 DWORD CALLBACK	ReadLogThread(LPVOID lp)
@@ -682,7 +687,7 @@ DWORD CALLBACK	ReadLogThread(LPVOID lp)
 
 		if (ReadFile(pDlg->hClientRead,str,4095,&bytesRead,NULL)==NULL) break;
 		str[bytesRead]=0;
-		pDlg->m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)str,0);
+		pDlg->SendMessage(ON_SHOWLOG_MSG,(WPARAM)str,0);
 		//查找：[OK] Edge Peer <<< ================ >>> Super Node
 		if (!bConnected)
 		{
@@ -800,7 +805,7 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 			{
 				len+=sprintf_s(ClinePath+len,sizeof(ClinePath)-len," %s","-r");
 				HRESULT hr=shareNet(ReSendIf);
-				m_LogDlg.SendMessage(ON_SHOWLOG_MSG,hr==S_OK ? (WPARAM)"网络共享已开启.\r\n":(WPARAM)"开启网络共享失败.\r\n");
+				SendMessage(ON_SHOWLOG_MSG,hr==S_OK ? (WPARAM)"网络共享已开启.\r\n":(WPARAM)"开启网络共享失败.\r\n");
 			}
 			if (!m_OtherParam.IsEmpty())
 				len+=sprintf_s(ClinePath+len,sizeof(ClinePath)-len," %s",m_OtherParam);
@@ -810,13 +815,13 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 				ConnectTick=0;
 				SetTimer(1,250,NULL);	//添加路由,我的电脑上测试需要延时大于3600ms，路由才能生效,定时时间到后添加路由
 				SetDlgItemText(IDC_STATIC_CONNECT_STATUS,"正在连接");
-				m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N客户端启动...----------------------\r\n");
-				m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)"命令行:");
-				m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)ClinePath);
-				m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)"\r\n");
+				SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N客户端启动...----------------------\r\n");
+				SendMessage(ON_SHOWLOG_MSG,(WPARAM)"命令行:");
+				SendMessage(ON_SHOWLOG_MSG,(WPARAM)ClinePath);
+				SendMessage(ON_SHOWLOG_MSG,(WPARAM)"\r\n");
 			}
 			else
-				m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N客户端失败.----------------------\r\n");
+				SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N客户端失败.----------------------\r\n");
 		}
 		//----------------------------启动服务端-----------------------------
 		int bEnable = ((CButton*)GetDlgItem(IDC_CHECK_SERVER))->GetCheck();
@@ -824,7 +829,7 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 		if (bEnable && Port>0 && Port<65535)
 		{
 			if (StartN2nServer(Port))
-				m_LogDlg.SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N服务端启动...----------------------\r\n");
+				SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N服务端启动...----------------------\r\n");
 		}
 		//禁用控件
 		for (int id=0; id<=10; id++)
@@ -839,7 +844,7 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 		if (hServerProcess!=0) 
 		{
 			TerminateProcess(hServerProcess,0);
-			m_LogDlg.PostMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N服务端关闭----------------------\r\n");
+			PostMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N服务端关闭----------------------\r\n");
 		}
 		if (hClientProcess!=0) 
 		{
@@ -853,7 +858,7 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 			SetDlgItemText(IDC_STATIC_CONNECT_STATUS,"未连接");
 			m_ConnectStatus.SetColor(RGB(155,100,75));
 			((CStatic*)GetDlgItem(IDC_PIC_CONNECT))->SetIcon(m_Icon_NoConnect);
-			m_LogDlg.PostMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N客户端关闭----------------------\r\n\r\n");
+			PostMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N客户端关闭----------------------\r\n\r\n");
 			strcpy_s(m_Nid.szTip,sizeof(m_Nid.szTip),"n2n Gui 未连接");
 			Shell_NotifyIcon(NIM_MODIFY,&m_Nid);				//修改托盘区图标
 			//
@@ -1121,23 +1126,26 @@ void Cn2n_guiDlg::OnTimer(UINT_PTR nIDEvent)
 void Cn2n_guiDlg::OnBnClickedBtnLog()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	m_LogDlg.ShowWindow(SW_SHOW);
-	m_LogDlg.PostMessage(ON_SHOWLOG_MSG,(WPARAM)"");
+	int const LogWidth=448;
+	static bool flag=true;
+	flag=!flag;
+	if (flag)
+	{
+		SetDlgItemText(IDC_BTN_LOG,"隐藏日志");
+		CRect rect;
+		GetWindowRect(rect);
+		rect.right+=LogWidth;
+		MoveWindow(rect);
+	}
+	else
+	{
+		SetDlgItemText(IDC_BTN_LOG,"运行日志");
+		CRect rect;
+		GetWindowRect(rect);
+		rect.right-=LogWidth;
+		MoveWindow(rect);
+	}
 }
-
-
-LRESULT Cn2n_guiDlg::OnMoveLogWindowMsg(WPARAM w, LPARAM l)
-{
-	CRect Rect;
-	GetWindowRect(&Rect);
-	int top=Rect.top,right=Rect.right;
-	m_LogDlg.GetWindowRect(Rect);
-	Rect.OffsetRect(right-Rect.left+5, top-Rect.top+5);
-	m_LogDlg.MoveWindow(Rect);
-	
-	return LRESULT();
-}
-
 
 void Cn2n_guiDlg::OnBnClickedBtnHide()
 {
@@ -1249,4 +1257,19 @@ void Cn2n_guiDlg::OnBnClickedBtnSet()
 		WritePrivateProfileString("Config","ReSendIf",ReSendIf,ProFileName);
 		WritePrivateProfileString("Config","Param",param,ProFileName);
 	}
+}
+
+
+LRESULT Cn2n_guiDlg::OnShowLogMsg(WPARAM w, LPARAM l)
+{
+	m_Log.SetSel(INT_MAX,-1);
+	m_Log.ReplaceSel((char*)w);
+	return LRESULT();
+}
+
+
+void Cn2n_guiDlg::OnBnClickedBtnClrLog()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	SetDlgItemText(IDC_EDIT_LOG,"");
 }
