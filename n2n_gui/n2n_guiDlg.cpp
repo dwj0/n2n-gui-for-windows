@@ -518,7 +518,7 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 	char str[2048],ProfilePath[MAX_PATH];
 	sprintf_s(ProfilePath,sizeof(ProfilePath),"%sn2n.ini",ProPath);
 	//
-	bAutoHide=GetPrivateProfileInt("Config","AutoHide",0,ProfilePath)==1;
+	bAutoHide=GetPrivateProfileInt("Config","AutoHide",0,ProfilePath)!=0;
 	GetPrivateProfileString("Config","ReSendIf","",str,sizeof(str),ProfilePath);
 	ReSendIf=str;
 	GetPrivateProfileString("Config","Param","",str,sizeof(str),ProfilePath);
@@ -584,6 +584,11 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 	//隐藏日志窗口
 	m_Log.SetLimitText(500*1024);
 	PostMessage(WM_COMMAND,IDC_BTN_LOG);
+
+	//启动连接
+	bAutoConnect=GetPrivateProfileInt("Config","AutoConnect",0,ProfilePath)!=0;
+	if (bAutoConnect)
+		PostMessage(WM_COMMAND,IDC_BTN_START_STOP);
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -1238,10 +1243,11 @@ void Cn2n_guiDlg::OnBnClickedBtnSet()
 	// TODO: 在此添加控件通知处理程序代码
 	char str[20],ProFileName[MAX_PATH];
 	sprintf_s(ProFileName,sizeof(ProFileName),"%sn2n.ini",ProPath);
-	CSetDlg dlg(bAutoHide,ReSendIf,m_OtherParam);
+	CSetDlg dlg(bAutoHide,bAutoConnect,ReSendIf,m_OtherParam);
 	if (dlg.DoModal()==IDOK)
 	{
 		bAutoHide=dlg.bHide;
+		bAutoConnect=dlg.bConnect;
 		if (ReSendIf!=dlg.ReSendIf)
 		{
 			ReSendIf=dlg.ReSendIf;
@@ -1254,6 +1260,7 @@ void Cn2n_guiDlg::OnBnClickedBtnSet()
 		m_OtherParam=dlg.m_OtherParam;
 		char const *param=(!m_OtherParam.IsEmpty()&&m_OtherParam!="")?m_OtherParam:NULL;		//这句为什么不行？
 		WritePrivateProfileString("Config","AutoHide",Itoa(bAutoHide,str),ProFileName);
+		WritePrivateProfileString("Config","AutoConnect",Itoa(bAutoConnect,str),ProFileName);
 		WritePrivateProfileString("Config","ReSendIf",ReSendIf,ProFileName);
 		WritePrivateProfileString("Config","Param",param,ProFileName);
 	}

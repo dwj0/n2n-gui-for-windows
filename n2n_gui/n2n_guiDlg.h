@@ -94,7 +94,7 @@ public:
 	void OnMenuClickedEditRoute(void);
 	UINT ConnectTick;
 	afx_msg void OnBnClickedBtnSet();
-	bool bAutoHide;
+	bool bAutoHide,bAutoConnect;
 	CString ReSendIf;
 	CString m_OtherParam;
 	CEdit m_Log;

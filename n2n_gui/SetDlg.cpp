@@ -22,9 +22,10 @@ CSetDlg::CSetDlg(CWnd* pParent /*=NULL*/)
 
 }
 
-CSetDlg::CSetDlg(bool _Hide, char const *_Resendif, char const *_Param, CWnd* pParent /*=NULL*/)
+CSetDlg::CSetDlg(bool _Hide, bool _Connect, char const *_Resendif, char const *_Param, CWnd* pParent /*=NULL*/)
 	: CDialogEx(CSetDlg::IDD, pParent)
 {
+	bConnect=_Connect;
 	bHide=_Hide;
 	ReSendIf=_Resendif;
 	m_OtherParam=_Param;
@@ -53,7 +54,8 @@ END_MESSAGE_MAP()
 void CSetDlg::OnBnClickedOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	bHide=((CButton*)GetDlgItem(IDC_CHECK_AUTOHIDE))->GetCheck()==1;
+	bHide=((CButton*)GetDlgItem(IDC_CHECK_AUTOHIDE))->GetCheck()!=0;
+	bConnect=((CButton*)GetDlgItem(IDC_CHECK_AUTOCONNECT))->GetCheck()!=0;
 	GetDlgItemText(IDC_EDIT_PARAM,m_OtherParam);
 
 	CComboBox *pBox = (CComboBox*)GetDlgItem(IDC_COMBO_IF);
@@ -107,6 +109,7 @@ BOOL CSetDlg::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	((CButton*)GetDlgItem(IDC_CHECK_AUTOHIDE))->SetCheck(bHide);
+	((CButton*)GetDlgItem(IDC_CHECK_AUTOCONNECT))->SetCheck(bConnect);
 	SetDlgItemText(IDC_EDIT_PARAM, m_OtherParam);
 
 	int n=0;

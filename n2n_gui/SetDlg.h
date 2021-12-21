@@ -15,7 +15,7 @@ class CSetDlg : public CDialogEx
 
 public:
 	CSetDlg(CWnd* pParent = NULL);   // 标准构造函数
-	CSetDlg(bool _Hide, char const *_Resendif, char const *_Param, CWnd* pParent = NULL);   // 标准构造函数
+	CSetDlg(bool _Hide, bool _Connect, char const *_Resendif, char const *_Param, CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CSetDlg();
 
 // 对话框数据
@@ -26,7 +26,7 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-	bool bHide;
+	bool bHide,bConnect;
 	CString ReSendIf;
 	CString m_OtherParam;
 	int AdaptersCnt;
