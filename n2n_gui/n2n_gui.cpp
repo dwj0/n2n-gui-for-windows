@@ -96,8 +96,11 @@ BOOL Cn2n_guiApp::InitInstance()
 	// 例如修改为公司或组织名
 	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
 
-	int n=GetCurrentDirectory(sizeof(ProPath),ProPath);
-	if (ProPath[n-1]!='\\') ProPath[n]='\\',ProPath[n+1]=0;
+	DWORD n=GetModuleFileName(NULL,ProPath,sizeof(ProPath));
+	char *p=strrchr(ProPath,'\\');
+	if (p) *++p=0;
+//	int n=GetCurrentDirectory(sizeof(ProPath),ProPath);
+//	if (ProPath[n-1]!='\\') ProPath[n]='\\',ProPath[n+1]=0;
 
 	Cn2n_guiDlg dlg;
 	m_pMainWnd = &dlg;
