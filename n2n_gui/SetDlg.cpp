@@ -122,8 +122,8 @@ BOOL CSetDlg::OnInitDialog()
 		{
 			char str[128];
 			sprintf_s(str,sizeof(str),"%s{%s}",pAdapters[i].Name,pAdapters[i].Description);
-			pBox->AddString(str);
-			if (ReSendIf==pAdapters[i].Name) n=i;
+			int m=pBox->AddString(str);
+			if (ReSendIf==pAdapters[i].Name) n=m;
 		}
 	}
 	pBox->SetCurSel(n);
