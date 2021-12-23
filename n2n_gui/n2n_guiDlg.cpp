@@ -17,7 +17,7 @@
 #define new DEBUG_NEW
 #endif
 
-#pragma comment(lib,"Iphlpapi.lib") //需要添加Iphlpapi.lib库
+char const Version[] = "V1.1.1";
 
 int GetNtVersionNumbers()
 {
@@ -405,15 +405,19 @@ public:
 // 实现
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	CString m_AbortString;
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
 {
+	m_AbortString.Format("n2n gui for windows，%s 版\n声明：本软件使用免费，但技术支持及个性化定制收费。作者：dwj00@163.com",Version);
 }
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_STATIC1, m_AbortString);
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)

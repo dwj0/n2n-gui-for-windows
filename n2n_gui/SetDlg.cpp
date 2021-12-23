@@ -10,7 +10,6 @@ NetAdapters_Struct *GetAdapters(int *Cnt);
 
 
 
-
 // CSetDlg 对话框
 
 IMPLEMENT_DYNAMIC(CSetDlg, CDialogEx)
@@ -49,7 +48,11 @@ END_MESSAGE_MAP()
 
 
 // CSetDlg 消息处理程序
-
+char *FormatIfName(char *dst, int dstsize, char const *name, char const *Description)
+{
+	sprintf_s(dst,dstsize-1,"%s{%s}",name,Description);
+	return dst;
+}
 
 void CSetDlg::OnBnClickedOk()
 {
@@ -64,10 +67,12 @@ void CSetDlg::OnBnClickedOk()
 		ReSendIf="";
 	else
 	{
+		char str[128];
 		pBox->GetLBText(cur,ReSendIf);
 		for (int i=0; i<AdaptersCnt; i++)
 		{
-			if (strncmp(ReSendIf,pAdapters[i].Name,strlen(pAdapters[i].Name))==0)
+			char const *ptmp=FormatIfName(str,sizeof(str),pAdapters[i].Name,pAdapters[i].Description);
+			if (strcmp(ReSendIf,ptmp)==0)
 			{
 				ReSendIf=pAdapters[i].Name;
 				break;
@@ -121,8 +126,7 @@ BOOL CSetDlg::OnInitDialog()
 		if (strncmp(pAdapters[i].Description,"TAP-Windows Adapter V9",22)!=0)
 		{
 			char str[128];
-			sprintf_s(str,sizeof(str),"%s{%s}",pAdapters[i].Name,pAdapters[i].Description);
-			int m=pBox->AddString(str);
+			int m=pBox->AddString(FormatIfName(str,sizeof(str),pAdapters[i].Name,pAdapters[i].Description));
 			if (ReSendIf==pAdapters[i].Name) n=m;
 		}
 	}
