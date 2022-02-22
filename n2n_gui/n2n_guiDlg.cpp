@@ -17,7 +17,7 @@
 #define new DEBUG_NEW
 #endif
 
-char const Version[] = "V1.1.1";
+char const Version[] = "V1.2.0";
 
 int GetNtVersionNumbers()
 {
@@ -189,7 +189,7 @@ HRESULT shareNet(INetSharingManager* pNSM, const char* srcName, const char* dstN
 	}
 
 	hr = pNSECC->get__NewEnum(&pUnk);
-	if (pUnk)
+	if (pUnk) 
 	{
 		hr = pUnk->QueryInterface(__uuidof(IEnumVARIANT), (void**)&pEV);
 		pUnk->Release();
@@ -787,10 +787,11 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 	{
 		int sysver=GetNtVersionNumbers();
 		char const *exefile=sysver==5 ? "tap-windows-9.9.2 for xp.exe":"tap-windows-9.21.2.exe";
-		if (!SHGetSpecialFolderPath(m_hWnd,str1,CSIDL_PROGRAM_FILES,false))
-			strcpy_s(str1,sizeof(str1),"C:\\Program Files");
-		sprintf_s(ClinePath,MAX_PATH,"%sn2n_client\\%s /S /D=\"%s\\TAP-Windows\"",ProPath,exefile,str1);
-		WinExec(ClinePath,SW_SHOW);
+//		if (!SHGetSpecialFolderPath(m_hWnd,str1,CSIDL_PROGRAM_FILES,false))
+//			strcpy_s(str1,sizeof(str1),"C:\\Program Files");
+		sprintf_s(ClinePath,MAX_PATH,"%sn2n_client\\%s",ProPath,exefile);
+		TRACE("%s\r\n",ClinePath);
+		ShellExecute(NULL,"open",ClinePath,"/S",NULL,SW_SHOWNORMAL);
 		KillTimer(2);
 		SetTimer(2,1000,NULL);
 	}
