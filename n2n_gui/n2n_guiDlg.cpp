@@ -17,7 +17,7 @@
 #define new DEBUG_NEW
 #endif
 
-char const Version[] = "V1.2.0";
+char const Version[] = "V1.2.1";
 
 int GetNtVersionNumbers()
 {
@@ -711,6 +711,16 @@ DWORD CALLBACK	ReadLogThread(LPVOID lp)
 				if (pDlg->bAutoHide) pDlg->PostMessage(WM_COMMAND,IDC_BTN_HIDE);
 			}
 		}
+		else
+		{
+			if (strstr(str,"WARNING: TAP I/O operation aborted, restart later.")!=NULL)
+			{
+				//重新添加路由
+				pDlg->SendMessage(ON_SHOWLOG_MSG,(WPARAM)"重新添加路由...\r\n",0);
+				pDlg->ConnectTick=0;
+				pDlg->SetTimer(1,600,NULL);
+			}
+		}
 	}
 	TRACE("线程退出\r\n");
 
@@ -779,7 +789,7 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 	// TODO: 在此添加控件通知处理程序代码
 	char Name[sizeof(((SERVER_Struct*)0)->NetName)],Passwd[sizeof(((SERVER_Struct*)0)->NetPasswd)];
 	char Server[sizeof(((SERVER_Struct*)0)->Server)];
-	char ClinePath[MAX_PATH+100],str1[32],str2[20];
+	char ClinePath[MAX_PATH+100],str1[MAX_PATH+200],str2[20];
 	UCHAR ip[4],mask[4];
 
 	GetDlgItemText(IDC_BTN_START_STOP,Name,10);
@@ -826,9 +836,8 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 				SetTimer(1,250,NULL);	//添加路由,我的电脑上测试需要延时大于3600ms，路由才能生效,定时时间到后添加路由
 				SetDlgItemText(IDC_STATIC_CONNECT_STATUS,"正在连接");
 				SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N客户端启动...----------------------\r\n");
-				SendMessage(ON_SHOWLOG_MSG,(WPARAM)"命令行:");
-				SendMessage(ON_SHOWLOG_MSG,(WPARAM)ClinePath);
-				SendMessage(ON_SHOWLOG_MSG,(WPARAM)"\r\n");
+				sprintf_s(str1,sizeof(str1),"命令行:%s\r\n",ClinePath);
+				SendMessage(ON_SHOWLOG_MSG,(WPARAM)str1);
 			}
 			else
 				SendMessage(ON_SHOWLOG_MSG,(WPARAM)"----------------------N2N客户端失败.----------------------\r\n");
