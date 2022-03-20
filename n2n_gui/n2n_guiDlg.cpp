@@ -716,7 +716,7 @@ DWORD CALLBACK	ReadLogThread(LPVOID lp)
 			if (strstr(str,"WARNING: TAP I/O operation aborted, restart later.")!=NULL)
 			{
 				//重新添加路由
-				pDlg->SendMessage(ON_SHOWLOG_MSG,(WPARAM)"重新添加路由...\r\n",0);
+//				pDlg->SendMessage(ON_SHOWLOG_MSG,(WPARAM)"重新添加路由...\r\n",0);
 				pDlg->ConnectTick=0;
 				pDlg->SetTimer(1,600,NULL);
 			}
