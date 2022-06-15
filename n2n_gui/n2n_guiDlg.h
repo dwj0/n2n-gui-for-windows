@@ -10,14 +10,14 @@
 
 #define ON_SHOWLOG_MSG			(WM_USER+1)
 #define ON_NOTIFY_ICON_MSG		(WM_USER+2)
+#define ON_REGOK_MSG			(WM_USER+3)
 
 
 struct SERVER_ROUTE_Struct
 {
 	bool	Enable;
-	UCHAR	Net[4];
-	UCHAR	Mask;
-	UCHAR	Gate[4];
+	char	Net[19];
+	char	Gate[16];
 	char	Note[16];
 };
 
@@ -26,9 +26,9 @@ struct SERVER_Struct
 	char	Server[128];
 	char	NetName[64];
 	char	NetPasswd[32];
-	UCHAR	IpAddr[4];
-	UCHAR	IpMask[4];
+	char	IpAddr[20];
 	int		RouteCnts;
+	enum    N2NVER_ENUM{N2N_V2=0,N2N_V3}N2N_Ver;
 	SERVER_ROUTE_Struct *pRouteList;
 };
 
@@ -71,13 +71,10 @@ public:
 	void SetRoute(bool bEnable);
 	virtual void OnCancel();
 
-	bool StartN2nClient(char * Cmdline);
 	afx_msg void OnBnClickedBtnSave();
 
 	HANDLE hClientProcess, hClientRead, hServerProcess;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	afx_msg void OnBnClickedBtnClrlog();
-	afx_msg void OnBnClickedBtnLog();
 	CColorStatic m_ConnectStatus;
 
 	HICON m_Icon_Connected, m_Icon_NoConnect, m_Icon_ConnectErr;
@@ -86,18 +83,23 @@ public:
 	NOTIFYICONDATA	m_Nid;
 	LRESULT OnNotifyIconMsg(WPARAM w, LPARAM l);
 	void OnMenuClickedShow(void);
-	bool StartN2nServer(int Port);
-	int SystemBits;
+	int SystemBits,SystemVersion;
 	afx_msg void OnBnClickedBtnEditServer();
 	void OnMenuClickedAddRoute(void);
 	void OnMenuClickedDelRoute(void);
 	void OnMenuClickedEditRoute(void);
 	UINT ConnectTick;
 	afx_msg void OnBnClickedBtnSet();
-	bool bAutoHide,bAutoConnect;
+	bool bAutoHide, bAutoConnect;
+	int N2nVerSel;
 	CString ReSendIf;
 	CString m_OtherParam;
 	CEdit m_Log;
 	LRESULT OnShowLogMsg(WPARAM w, LPARAM l);
 	afx_msg void OnBnClickedBtnClrLog();
+	void InstallWintap();
+	bool StartEdge();
+	bool StartSuperNode();
+	void StopN2n();
+	LRESULT OnRegOkMsg(WPARAM w, LPARAM l);
 };

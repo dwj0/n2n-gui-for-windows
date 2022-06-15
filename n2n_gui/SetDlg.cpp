@@ -79,33 +79,7 @@ void CSetDlg::OnBnClickedOk()
 			}
 		}
 	}
-
-	/*
-//	if (ReSendIf!="无转发")
-	{
-		CoInitialize(NULL);
-		CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
-
-		INetSharingManager * pNSM = NULL;
-		HRESULT hr = ::CoCreateInstance(__uuidof(NetSharingManager),
-			NULL,
-			CLSCTX_ALL,
-			__uuidof(INetSharingManager),
-			(void**)&pNSM);
-
-		if (!pNSM)
-		{
-//			wprintf(L"failed to create NetSharingManager object\r\n");
-		}
-		else
-		{
-			//shareNet(pNSM, "WLAN", "以太网 4");
-			disShareNet(pNSM);
-			shareNet(pNSM, ReSendIf, "本地连接 2");
-			//StartHostednetwork();
-		}
-	}*/
-
+	
 	CDialogEx::OnOK();
 }
 

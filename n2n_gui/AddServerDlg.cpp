@@ -14,13 +14,15 @@ IMPLEMENT_DYNAMIC(CAddServerDlg, CDialogEx)
 CAddServerDlg::CAddServerDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CAddServerDlg::IDD, pParent)
 	, m_Edit(_T(""))
+	, m_Ver(0)
 {
 }
 
-CAddServerDlg::CAddServerDlg(char const *_ServerAddr, CWnd* pParent /*=NULL*/)
+CAddServerDlg::CAddServerDlg(char const *_ServerAddr, int ver, CWnd* pParent /*=NULL*/)
 	: CDialogEx(CAddServerDlg::IDD, pParent)
 {
 	m_Edit=_ServerAddr;
+	m_Ver = ver;
 }
 
 CAddServerDlg::~CAddServerDlg()
@@ -31,6 +33,7 @@ void CAddServerDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_EDIT1, m_Edit);
+	DDX_CBIndex(pDX, IDC_COMBO1, m_Ver);
 }
 
 

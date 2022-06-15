@@ -16,6 +16,10 @@ char *Itoa(int n, char *str);
 char *IpToStrip(UCHAR const *ip, char *str);
 bool StripToIp(char const *str, UCHAR *ip);
 bool StrNetaddrToIp(char const *str, UCHAR *ip, UCHAR *mask);
+char *MaskBitToStr(int Mask, char *str);
+
+BOOL RegSN(char const *sn);
+extern BOOL isReg;
 
 // Cn2n_guiApp:
 // 有关此类的实现，请参阅 n2n_gui.cpp

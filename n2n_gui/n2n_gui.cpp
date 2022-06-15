@@ -10,9 +10,66 @@
 #define new DEBUG_NEW
 #endif
 
+#define REG_SN_KEY		"SOFTWARE\\dwj0\\n2ngui"
+
+char ProPath[MAX_PATH];
+BOOL isReg = FALSE;
+
+static char *ReadSN(char *str)
+{
+	HKEY key;
+	str[0] = 0;
+	LSTATUS rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_SN_KEY,0, KEY_READ,&key);
+	if (key==NULL) return "";
+
+	DWORD len = 10,dwType=REG_SZ;
+	rc = RegQueryValueEx(key, "sn", 0, &dwType,(LPBYTE)str,&len);
+
+	RegCloseKey(key);
+	return str;
+}
+
+static void WriteSN(char const *str)
+{
+	HKEY key;
+
+	DWORD dwDisposition = REG_CREATED_NEW_KEY;	// 如果不存在不创建
+	LONG lRet = RegCreateKeyEx(HKEY_LOCAL_MACHINE, REG_SN_KEY, 0, NULL,
+		REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &key, &dwDisposition);
+	if (lRet != ERROR_SUCCESS)
+		return ;
+	
+	RegSetValueEx(key, "sn", 0, REG_SZ, (BYTE*)str, strlen(str));
+
+	RegCloseKey(key);
+}
+
+static BOOL CheckReg(char const *str)
+{
+	return strlen(str) == 8 && memcmp(str, "dwj0", 4) == 0;
+}
+
+BOOL RegSN(char const *sn)
+{
+	isReg = CheckReg(sn);
+	if (isReg) WriteSN(sn);
+	return isReg;
+}
+
 char *Itoa(int n, char *str)
 {
 	sprintf_s(str,12,"%d",n);
+	return str;
+}
+
+char *MaskBitToStr(int Mask, char *str)
+{
+	unsigned int val = 0;
+	if (Mask > 32) return "";
+
+	for (int j = 0; j < Mask; j++)
+		val |= (1 << (31 - j));
+	sprintf_s(str, 16,"%d.%d.%d.%d", (UCHAR)(val >> 24), (UCHAR)((val >> 16) & 0xff), (UCHAR)((val >> 8) & 0xff), (UCHAR)(val & 0xff));
 	return str;
 }
 
@@ -47,8 +104,6 @@ END_MESSAGE_MAP()
 
 
 // Cn2n_guiApp 构造
-char ProPath[MAX_PATH];
-
 Cn2n_guiApp::Cn2n_guiApp()
 {
 	// 支持重新启动管理器
@@ -95,10 +150,12 @@ BOOL Cn2n_guiApp::InitInstance()
 	// TODO: 应适当修改该字符串，
 	// 例如修改为公司或组织名
 	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
-
+	//注册查询
+	isReg = CheckReg(ReadSN(ProPath));
+	//获取软件路径
 	DWORD n=GetModuleFileName(NULL,ProPath,sizeof(ProPath));
 	char *p=strrchr(ProPath,'\\');
-	if (p) *++p=0;
+	if (p) *p=0;
 
 	Cn2n_guiDlg dlg;
 	m_pMainWnd = &dlg;
