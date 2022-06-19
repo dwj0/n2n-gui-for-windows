@@ -594,7 +594,11 @@ DWORD CALLBACK	ReadLogThread(LPVOID lp)
 				((CStatic*)pDlg->GetDlgItem(IDC_PIC_CONNECT))->SetIcon(pDlg->m_Icon_Connected);
 				strcpy_s(pDlg->m_Nid.szTip,sizeof(pDlg->m_Nid.szTip),"n2n Gui 已连接");	
 				Shell_NotifyIcon(NIM_MODIFY,&pDlg->m_Nid);				//修改托盘区图标
-				if (pDlg->bAutoHide) pDlg->PostMessage(WM_COMMAND,IDC_BTN_HIDE);
+				if (pDlg->bAutoHide)
+				{
+					Sleep(1000);
+					pDlg->ShowWindow(SW_HIDE);
+				}
 			}
 		}
 /*		else
