@@ -78,7 +78,6 @@ public:
 	CColorStatic m_ConnectStatus;
 
 	HICON m_Icon_Connected, m_Icon_NoConnect, m_Icon_ConnectErr;
-	afx_msg void OnBnClickedBtnHide();
 
 	NOTIFYICONDATA	m_Nid;
 	LRESULT OnNotifyIconMsg(WPARAM w, LPARAM l);

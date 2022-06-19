@@ -316,7 +316,6 @@ BEGIN_MESSAGE_MAP(Cn2n_guiDlg, CDialogEx)
 	ON_MESSAGE(ON_NOTIFY_ICON_MSG,&Cn2n_guiDlg::OnNotifyIconMsg)
 	ON_MESSAGE(ON_SHOWLOG_MSG,&Cn2n_guiDlg::OnShowLogMsg)
 	ON_MESSAGE(ON_REGOK_MSG,&Cn2n_guiDlg::OnRegOkMsg)
-	ON_BN_CLICKED(IDC_BTN_HIDE, &Cn2n_guiDlg::OnBnClickedBtnHide)
 	ON_BN_CLICKED(IDC_BTN_EDIT_SERVER, &Cn2n_guiDlg::OnBnClickedBtnEditServer)
 	ON_BN_CLICKED(IDC_BTN_SET, &Cn2n_guiDlg::OnBnClickedBtnSet)
 	ON_BN_CLICKED(IDC_BTN_CLR_LOG, &Cn2n_guiDlg::OnBnClickedBtnClrLog)
@@ -879,13 +878,6 @@ void Cn2n_guiDlg::OnTimer(UINT_PTR nIDEvent)
 		}
 	}
 	CDialogEx::OnTimer(nIDEvent);
-}
-
-
-void Cn2n_guiDlg::OnBnClickedBtnHide()
-{
-	// TODO: 在此添加控件通知处理程序代码
-	ShowWindow(SW_HIDE);
 }
 
 
