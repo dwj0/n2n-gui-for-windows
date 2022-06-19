@@ -548,18 +548,41 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 	//设置字体
-	CFont *font = m_Log.GetFont();
-	LOGFONT lf;
-	font->GetLogFont(&lf);
-	lf.lfHeight = -80;
 	CFont newfont;
-	newfont.CreatePointFontIndirect(&lf);
+	newfont.CreateFont(
+		14,                        // nHeight
+		0,                         // nWidth
+		0,                         // nEscapement
+		0,                         // nOrientation
+		FW_NORMAL,                 // nWeight
+		FALSE,                     // bItalic
+		FALSE,                     // bUnderline
+		0,                         // cStrikeOut
+		ANSI_CHARSET,              // nCharSet
+		OUT_DEFAULT_PRECIS,        // nOutPrecision
+		CLIP_DEFAULT_PRECIS,       // nClipPrecision
+		DEFAULT_QUALITY,           // nQuality
+		DEFAULT_PITCH | FF_SWISS, // nPitchAndFamily
+		_T("Aria"));                 // lpszFacename
+//	newfont.CreatePointFontIndirect(&lf);
 	m_Log.SetFont(&newfont);
 	newfont.DeleteObject();
-
-	lf.lfHeight = -180;
-	lf.lfWeight = 800;
-	newfont.CreatePointFontIndirect(&lf);
+	
+	newfont.CreateFont(
+		32,                        // nHeight
+		0,                         // nWidth
+		0,                         // nEscapement
+		0,                         // nOrientation
+		FW_EXTRABOLD,              // nWeight
+		FALSE,                     // bItalic
+		FALSE,                     // bUnderline
+		0,                         // cStrikeOut
+		ANSI_CHARSET,              // nCharSet
+		OUT_DEFAULT_PRECIS,        // nOutPrecision
+		CLIP_DEFAULT_PRECIS,       // nClipPrecision
+		DEFAULT_QUALITY,           // nQuality
+		DEFAULT_PITCH | FF_SWISS, // nPitchAndFamily
+		_T("Arial"));                 // lpszFacename
 	m_ConnectStatus.SetTextFont(newfont);
 	newfont.DeleteObject();
 
@@ -1201,6 +1224,7 @@ void Cn2n_guiDlg::InstallWintap()
 	ShellExecute(NULL, "open", ClientPath, str1, NULL, SW_SHOWNORMAL);
 	sprintf_s(ClientPath + n, sizeof(ClientPath) - n, " %s\r\n", str1);
 	SendMessage(ON_SHOWLOG_MSG, (WPARAM)ClientPath);
+	if (SystemVersion==6) SendMessage(ON_SHOWLOG_MSG, (WPARAM)"如果驱动安装失败，请先安装补丁：Windows6.1-KB3033929\r\n");
 	KillTimer(2);
 	SetTimer(2, 1000, NULL);
 }
