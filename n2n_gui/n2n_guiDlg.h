@@ -92,7 +92,7 @@ public:
 	afx_msg void OnBnClickedBtnSet();
 	bool bAutoHide, bAutoConnect;
 	int N2nVerSel;
-	CString ReSendIf;
+	BOOL bReSend;
 	CString m_OtherParam;
 	CEdit m_Log;
 	LRESULT OnShowLogMsg(WPARAM w, LPARAM l);

@@ -137,165 +137,6 @@ bool GetProfileServersInfo(char const *ProFile, char const *AppName, SERVER_Stru
 	return true;
 }
 
-HRESULT disShareNet(INetSharingManager* pNSM)
-{
-	INetConnection * pNC = NULL;
-	INetSharingConfiguration * pNSC = NULL;
-	IEnumVARIANT * pEV = NULL;
-	IUnknown * pUnk = NULL;
-	INetSharingEveryConnectionCollection * pNSECC = NULL;
-
-	HRESULT hr = pNSM->get_EnumEveryConnection(&pNSECC);
-	VARIANT v;
-	VariantInit(&v);
-
-	if (!pNSECC)
-	{
-		return NULL;
-	}
-
-	hr = pNSECC->get__NewEnum(&pUnk);
-	if (pUnk)
-	{
-		hr = pUnk->QueryInterface(__uuidof(IEnumVARIANT), (void**)&pEV);
-		pUnk->Release();
-	}
-
-	while (S_OK == pEV->Next(1, &v, NULL))
-	{
-		if (V_VT(&v) != VT_UNKNOWN) continue;
-		V_UNKNOWN(&v)->QueryInterface(__uuidof(INetConnection), (void**)&pNC);
-		if (pNC==NULL) continue;
-
-		VARIANT_BOOL flag=0;
-		hr = pNSM->get_INetSharingConfigurationForINetConnection(pNC, &pNSC);
-		hr = pNSC->get_SharingEnabled(&flag);
-		if (flag)
-		{
-			hr = pNSC->DisableSharing();
-			Sleep(500);
-		}
-		pNSC->Release();
-	}
-	return hr;
-}
-
-HRESULT shareNet(INetSharingManager* pNSM, const char* srcName, const char* dstName)
-{
-	INetConnection * pNC = NULL;
-	INetSharingConfiguration * pNSC = NULL;
-	IEnumVARIANT * pEV = NULL;
-	IUnknown * pUnk = NULL;
-	INetSharingEveryConnectionCollection * pNSECC = NULL;
-
-	HRESULT hr = pNSM->get_EnumEveryConnection(&pNSECC);
-	VARIANT v;
-	VariantInit(&v);
-
-	if (!pNSECC)
-	{
-		return NULL;
-	}
-
-	hr = pNSECC->get__NewEnum(&pUnk);
-	if (pUnk) 
-	{
-		hr = pUnk->QueryInterface(__uuidof(IEnumVARIANT), (void**)&pEV);
-		pUnk->Release();
-	}
-
-	while (S_OK == pEV->Next(1, &v, NULL))
-	{
-		if (V_VT(&v) != VT_UNKNOWN) continue;
-		V_UNKNOWN(&v)->QueryInterface(__uuidof(INetConnection), (void**)&pNC);
-		if (pNC==NULL) continue;
-
-		NETCON_PROPERTIES* pNP = NULL;
-		pNC->GetProperties(&pNP);
-
-		std::string tmpName = CW2A(pNP->pszwName);
-		//printf("###### |%s| : |%s|\r\n", tmpName.c_str(),(char*)nicName);
-		if (!strcmp(tmpName.c_str(), (char*)srcName))
-		{
-			//printf("**************find nic srcName : %s\r\n", (char*)srcName);
-			hr = pNSM->get_INetSharingConfigurationForINetConnection(pNC, &pNSC);
-			hr = pNSC->EnableSharing(ICSSHARINGTYPE_PUBLIC);
-			pNSC->Release();
-		}
-		else if (!strcmp(tmpName.c_str(), (char*)dstName))
-		{
-			//	printf("**************find nic dstName : %s\r\n", (char*)dstName);
-			hr = pNSM->get_INetSharingConfigurationForINetConnection(pNC, &pNSC);
-			hr = pNSC->EnableSharing(ICSSHARINGTYPE_PRIVATE);
-			pNSC->Release();
-		}
-	}
-	return hr;
-}
-
-bool CheckshareNet(INetSharingManager* pNSM, const char* srcName, const char* dstName)
-{
-	INetConnection * pNC = NULL;
-	INetSharingConfiguration * pNSC = NULL;
-	IEnumVARIANT * pEV = NULL;
-	IUnknown * pUnk = NULL;
-	INetSharingEveryConnectionCollection * pNSECC = NULL;
-
-	HRESULT hr = pNSM->get_EnumEveryConnection(&pNSECC);
-	VARIANT v;
-	VariantInit(&v);
-
-	if (!pNSECC)
-	{
-		return false;
-	}
-
-	hr = pNSECC->get__NewEnum(&pUnk);
-	if (pUnk)
-	{
-		hr = pUnk->QueryInterface(__uuidof(IEnumVARIANT), (void**)&pEV);
-		pUnk->Release();
-	}
-
-	bool bsrcflag=false,bdstflag=false;
-	while (S_OK == pEV->Next(1, &v, NULL))
-	{
-		if (V_VT(&v) != VT_UNKNOWN) continue;
-		V_UNKNOWN(&v)->QueryInterface(__uuidof(INetConnection), (void**)&pNC);
-		if (pNC==NULL) continue;
-
-		NETCON_PROPERTIES* pNP = NULL;
-		pNC->GetProperties(&pNP);
-
-		std::string tmpName = CW2A(pNP->pszwName);
-		//printf("###### |%s| : |%s|\r\n", tmpName.c_str(),(char*)nicName);
-		VARIANT_BOOL flag=0;
-		SHARINGCONNECTIONTYPE Type;
-		if (!strcmp(tmpName.c_str(), (char*)srcName))
-		{
-			//printf("**************find nic srcName : %s\r\n", (char*)srcName);
-			hr = pNSM->get_INetSharingConfigurationForINetConnection(pNC, &pNSC);
-			hr = pNSC->get_SharingEnabled(&flag);
-			hr = pNSC->get_SharingConnectionType(&Type);
-			pNSC->Release();
-			if (flag && Type==ICSSHARINGTYPE_PUBLIC) 
-				bsrcflag=true;
-		}
-		else if (!strcmp(tmpName.c_str(), (char*)dstName))
-		{
-			//	printf("**************find nic dstName : %s\r\n", (char*)dstName);
-			hr = pNSM->get_INetSharingConfigurationForINetConnection(pNC, &pNSC);
-			hr = pNSC->get_SharingEnabled(&flag);
-			hr = pNSC->get_SharingConnectionType(&Type);
-			pNSC->Release();
-			if (flag && Type==ICSSHARINGTYPE_PRIVATE) 
-				bdstflag=true;
-		}
-		if (bsrcflag && bdstflag) return true;
-	}
-	return false;
-}
-
 NetAdapters_Struct *GetAdapters(int *Cnt)
 {
 	NetAdapters_Struct *NetAdapters = NULL;
@@ -344,40 +185,6 @@ NetAdapters_Struct *GetAdapters(int *Cnt)
 	delete NetAdapters;
 	delete pIpAdapterInfo;
 	return NULL;
-}
-
-HRESULT shareNet(const char* srcName)
-{
-	CoInitialize(NULL);
-	CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
-
-	INetSharingManager * pNSM = NULL;
-	HRESULT hr = ::CoCreateInstance(__uuidof(NetSharingManager),
-		NULL,
-		CLSCTX_ALL,
-		__uuidof(INetSharingManager),
-		(void**)&pNSM);
-
-	if (pNSM)
-	{
-		if (srcName[0]==0)
-			hr = disShareNet(pNSM);
-		else
-		{
-			int Cnt=0;
-			NetAdapters_Struct *pAdapters = GetAdapters(&Cnt);
-			for (int n=0; n<Cnt; n++)
-			{
-				if (strncmp(pAdapters[n].Description,"TAP-Windows Adapter V9",22)==0)
-				{
-					if (CheckshareNet(pNSM, srcName, pAdapters[n].Name)) break;
-					hr = disShareNet(pNSM);
-					return shareNet(pNSM, srcName, pAdapters[n].Name);
-				}
-			}
-		}
-	}
-	return hr;
 }
 
 bool CheckTapAdapters()
@@ -595,9 +402,8 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 	char str[2048],ProfilePath[MAX_PATH];
 	sprintf_s(ProfilePath,sizeof(ProfilePath),"%s\\n2n.ini",ProPath);
 	//
-	bAutoHide=GetPrivateProfileInt("Config","AutoHide",0,ProfilePath)!=0;
-	GetPrivateProfileString("Config","ReSendIf","",str,sizeof(str),ProfilePath);
-	ReSendIf=str;
+	bAutoHide = GetPrivateProfileInt("Config", "AutoHide", 0, ProfilePath) != 0;
+	bReSend = GetPrivateProfileInt("Config", "ReSend", 0, ProfilePath) != 0;
 	GetPrivateProfileString("Config","Param","",str,sizeof(str),ProfilePath);
 	m_OtherParam=str;
 	//读取服务器列表
@@ -979,7 +785,7 @@ void Cn2n_guiDlg::OnBnClickedBtnSave()
 	WritePrivateProfileString("Config","LastSel",Itoa(n,str),ProFileName);
 	WritePrivateProfileString("Config","Param",m_OtherParam.IsEmpty() ? NULL:m_OtherParam,ProFileName);
 	WritePrivateProfileString("Config","AutoHide",Itoa(bAutoHide,str),ProFileName);
-	WritePrivateProfileString("Config", "ReSendIf", ReSendIf, ProFileName);
+	WritePrivateProfileString("Config", "ReSend", Itoa(bReSend,str), ProFileName);
 	//读取当前参数
 	char Name[sizeof(((SERVER_Struct*)0)->NetName)],Passwd[sizeof(((SERVER_Struct*)0)->NetPasswd)],strip[20];
 	SERVER_Struct &NowHost=ServerArray[n];
@@ -1163,25 +969,17 @@ void Cn2n_guiDlg::OnBnClickedBtnSet()
 	// TODO: 在此添加控件通知处理程序代码
 	char str[20],ProFileName[MAX_PATH];
 	sprintf_s(ProFileName,sizeof(ProFileName),"%s\\n2n.ini",ProPath);
-	CSetDlg dlg(bAutoHide,bAutoConnect,ReSendIf,m_OtherParam);
+	CSetDlg dlg(bAutoHide,bAutoConnect,bReSend!=FALSE,m_OtherParam);
 	if (dlg.DoModal()==IDOK)
 	{
 		bAutoHide=dlg.bHide;
 		bAutoConnect=dlg.bConnect;
-		if (ReSendIf!=dlg.ReSendIf)
-		{
-			ReSendIf=dlg.ReSendIf;
-			if (ReSendIf=="")
-			{
-				shareNet(ReSendIf);
-				MessageBox("关闭网络共享完成.");
-			}
-		}
+		bReSend = dlg.bReSend;
 		m_OtherParam=dlg.m_OtherParam;
 		char const *param=(!m_OtherParam.IsEmpty()&&m_OtherParam!="")?m_OtherParam:NULL;		//这句为什么不行？
 		WritePrivateProfileString("Config","AutoHide",Itoa(bAutoHide,str),ProFileName);
 		WritePrivateProfileString("Config","AutoConnect",Itoa(bAutoConnect,str),ProFileName);
-		WritePrivateProfileString("Config","ReSendIf",ReSendIf,ProFileName);
+		WritePrivateProfileString("Config","ReSend",Itoa(bReSend,str),ProFileName);
 		WritePrivateProfileString("Config", "Param", param, ProFileName);
 	}
 }
@@ -1270,12 +1068,8 @@ bool Cn2n_guiDlg::StartEdge()
 
 	if (Passwd[0] != 0)
 		len += sprintf_s(CmdLine + len, sizeof(CmdLine) - len, " -k %s", Passwd);
-	if (ReSendIf != "")
-	{
+	if (bReSend)
 		len += sprintf_s(CmdLine + len, sizeof(CmdLine) - len, " %s", "-r");
-		HRESULT hr = shareNet(ReSendIf);
-		SendMessage(ON_SHOWLOG_MSG, hr == S_OK ? (WPARAM)"网络共享已开启.\r\n" : (WPARAM)"开启网络共享失败.\r\n");
-	}
 	if (!m_OtherParam.IsEmpty())
 		len += sprintf_s(CmdLine + len, sizeof(CmdLine) - len, " %s", (char const *)m_OtherParam);
 	TRACE("%s\r\n", CmdLine);
