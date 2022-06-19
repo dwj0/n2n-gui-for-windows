@@ -492,6 +492,10 @@ void Cn2n_guiDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		CAboutDlg dlgAbout;
 		dlgAbout.DoModal();
 	}
+	else  if (nID == SC_CLOSE)//截获关闭按钮消息
+	{
+		ShowWindow(SW_HIDE);
+	}
 	else
 	{
 		CDialogEx::OnSysCommand(nID, lParam);
