@@ -18,7 +18,7 @@
 #define new DEBUG_NEW
 #endif
 
-char const Version[] = "V2.0.0";
+char const Version[] = "V2.1.0";
 
 char *FormatServerShowName(SERVER_Struct *Host, char *str)
 {
@@ -625,7 +625,8 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 		InstallWintap();
 	else if (strcmp(Name,"Æô¶¯")==0)
 	{
-		if (StartSuperNode() || StartEdge())
+		bool bsupernode = StartSuperNode(), bedge = StartEdge();
+		if (bsupernode || bedge)
 		{
 			//½ûÓÃ¿Ø¼þ
 			for (int id = 0; id <= 9; id++)
