@@ -18,7 +18,7 @@
 #define new DEBUG_NEW
 #endif
 
-char const Version[] = "V2.1.0";
+char const Version[] = "V2.1.1";
 
 char *FormatServerShowName(SERVER_Struct *Host, char *str)
 {
@@ -332,7 +332,7 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 	// IDM_ABOUTBOX 必须在系统命令范围内。
 	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
 	ASSERT(IDM_ABOUTBOX < 0xF000);
-
+	
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
 	if (pSysMenu != NULL)
 	{
@@ -412,7 +412,7 @@ BOOL Cn2n_guiDlg::OnInitDialog()
 	{
 		char *p=str+i;
 		i+=strlen(p)+1;
-		if (memcmp(p,"SERVER_No",9)==0 && p[9]>='0' && p[9]<='9')
+		if (memcmp(p,"SERVER_No",9)==0 && p[9]>='0' && p[9]<='9') 
 		{
 			SERVER_Struct Host;
 			if (GetProfileServersInfo(ProfilePath,p,&Host)) 
@@ -630,7 +630,7 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 		{
 			//禁用控件
 			for (int id = 0; id <= 9; id++)
-				GetDlgItem(IDC_COMBO_SERVERLIST + id)->EnableWindow(FALSE);
+				GetDlgItem(IDC_CHECK_SERVER + id)->EnableWindow(FALSE);
 			SetDlgItemText(IDC_BTN_START_STOP, "停止");
 		}
 	}
@@ -638,8 +638,8 @@ void Cn2n_guiDlg::OnBnClickedBtnStartStop()
 	{
 		StopN2n();
 		//启用控件
-		for (int id=0; id<=9; id++)
-			GetDlgItem(IDC_COMBO_SERVERLIST+id)->EnableWindow(TRUE);
+		for (int id=isReg ? 0:2; id<=9; id++)
+			GetDlgItem(IDC_CHECK_SERVER +id)->EnableWindow(TRUE);
 		SetDlgItemText(IDC_BTN_START_STOP,"启动");
 	}
 }
