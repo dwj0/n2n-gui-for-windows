@@ -18,7 +18,7 @@
 #define new DEBUG_NEW
 #endif
 
-char const Version[] = "V2.1.1";
+char const Version[] = "V2.2";
 
 char *FormatServerShowName(SERVER_Struct *Host, char *str)
 {
@@ -1166,8 +1166,13 @@ void Cn2n_guiDlg::StopN2n()
 	}
 	if (hClientProcess != 0)
 	{
-		TerminateProcess(hClientProcess, 0);
-		Sleep(100);			//等待线程退出
+		DWORD ProcessID = GetProcessId(hClientProcess);
+		AttachConsole(ProcessID);
+		//SetConsoleCtrlHandler(NULL, TRUE);
+		GenerateConsoleCtrlEvent(CTRL_C_EVENT, ProcessID);
+		FreeConsole();
+		WaitForSingleObject(hClientProcess, INFINITE);		//等待客户端退出
+
 		if (hClientRead != 0) CloseHandle(hClientRead);
 		Sleep(100);
 		hServerProcess = 0;
