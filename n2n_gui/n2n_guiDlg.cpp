@@ -18,7 +18,7 @@
 #define new DEBUG_NEW
 #endif
 
-char const Version[] = "V2.2.1";
+char const Version[] = "V2.2.2";
 
 char *FormatServerShowName(SERVER_Struct *Host, char *str)
 {
@@ -581,8 +581,10 @@ DWORD CALLBACK	ReadLogThread(LPVOID lp)
 		DWORD bytesRead;
 
 		if (ReadFile(pDlg->hClientRead,str,4095,&bytesRead,NULL)==NULL) break;
-		str[bytesRead]=0;
-		pDlg->SendMessage(ON_SHOWLOG_MSG,(WPARAM)str,0);
+		char *pbuf = new char[bytesRead+1];
+		memcpy(pbuf, str, bytesRead);
+		pbuf[bytesRead] = 0;
+		pDlg->PostMessage(ON_SHOWLOG_MSG, (WPARAM)pbuf, 1);
 		//≤È’“£∫[OK] Edge Peer <<< ================ >>> Super Node
 		if (!bConnected)
 		{
@@ -990,6 +992,7 @@ LRESULT Cn2n_guiDlg::OnShowLogMsg(WPARAM w, LPARAM l)
 {
 	m_Log.SetSel(INT_MAX,-1);
 	m_Log.ReplaceSel((char*)w);
+	if (l == 1) delete (char*)w;
 	return LRESULT();
 }
 
