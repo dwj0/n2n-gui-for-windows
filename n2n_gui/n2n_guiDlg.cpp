@@ -18,7 +18,7 @@
 #define new DEBUG_NEW
 #endif
 
-char const Version[] = "V2.2.2";
+char const Version[] = "V2.2.3";
 
 char *FormatServerShowName(SERVER_Struct *Host, char *str)
 {
@@ -572,19 +572,17 @@ void Cn2n_guiDlg::SetRoute(bool bEnable)
 DWORD CALLBACK	ReadLogThread(LPVOID lp)
 {
 	Cn2n_guiDlg *pDlg = (Cn2n_guiDlg*)lp;
+	char *str = NULL;
 	bool bConnected=false;
 	char const *okstr = pDlg->N2nVerSel == 0 ? "[OK] Edge Peer <<< ================ >>> Super Node" : "[OK] edge <<< ================ >>> supernode";
 	
 	while (1)
 	{
-		char str[4096];
 		DWORD bytesRead;
+		if (str == NULL) str = new char[4096];
 
 		if (ReadFile(pDlg->hClientRead,str,4095,&bytesRead,NULL)==NULL) break;
-		char *pbuf = new char[bytesRead+1];
-		memcpy(pbuf, str, bytesRead);
-		pbuf[bytesRead] = 0;
-		pDlg->PostMessage(ON_SHOWLOG_MSG, (WPARAM)pbuf, 1);
+		str[bytesRead] = 0;
 		//查找：[OK] Edge Peer <<< ================ >>> Super Node
 		if (!bConnected)
 		{
@@ -612,7 +610,10 @@ DWORD CALLBACK	ReadLogThread(LPVOID lp)
 				pDlg->SetTimer(1,600,NULL);
 			}
 		}*/
+		pDlg->PostMessage(ON_SHOWLOG_MSG, (WPARAM)str, 1);
+		str = NULL;
 	}
+	if (str != NULL) delete str;
 	TRACE("线程退出\r\n");
 
 	return 0;
