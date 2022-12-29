@@ -1133,7 +1133,7 @@ bool Cn2n_guiDlg::StartSuperNode()
 	int Port = GetDlgItemInt(IDC_EDIT_SERVER_PORT);
 	if (bEnable && Port > 0 && Port < 65535)
 	{
-		char Cmd[MAX_PATH];
+		char Cmd[MAX_PATH], str1[MAX_PATH+20];
 		STARTUPINFO si;
 		PROCESS_INFORMATION pi;
 		ZeroMemory(&si, sizeof(si));
@@ -1152,6 +1152,8 @@ bool Cn2n_guiDlg::StartSuperNode()
 	
 		hServerProcess = pi.hProcess;
 		SendMessage(ON_SHOWLOG_MSG, (WPARAM)"--------------------------N2N服务端启动...--------------------------\r\n");
+		sprintf_s(str1, sizeof(str1), "命令行:%s\r\n", Cmd);
+		SendMessage(ON_SHOWLOG_MSG, (WPARAM)str1);
 		return true;
 	}
 	return false;
@@ -1166,7 +1168,7 @@ void Cn2n_guiDlg::StopN2n()
 	if (hServerProcess != 0)
 	{
 		TerminateProcess(hServerProcess, 0);
-		PostMessage(ON_SHOWLOG_MSG, (WPARAM)"--------------------------N2N服务端关闭--------------------------\r\n");
+		SendMessage(ON_SHOWLOG_MSG, (WPARAM)"--------------------------N2N服务端关闭--------------------------\r\n");
 	}
 	if (hClientProcess != 0)
 	{
