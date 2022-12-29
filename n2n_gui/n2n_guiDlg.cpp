@@ -1175,7 +1175,7 @@ void Cn2n_guiDlg::StopN2n()
 		//SetConsoleCtrlHandler(NULL, TRUE);
 		GenerateConsoleCtrlEvent(CTRL_C_EVENT, ProcessID);
 		FreeConsole();
-		if (WaitForSingleObject(hClientProcess, 10000) == WAIT_TIMEOUT)		//等待客户端退出
+		if (WaitForSingleObject(hClientProcess, 20000) == WAIT_TIMEOUT)		//等待客户端退出
 		{
 			TerminateProcess(hClientProcess, 0);
 			PostMessage(ON_SHOWLOG_MSG, (WPARAM)"客户端未能正常退出，强行关闭。\r\n");
